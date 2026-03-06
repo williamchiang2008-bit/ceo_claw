@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>沃橙CEO女神节贺卡 · 粉金高定版</title>
+  <style>
+    :root {
+      --bg1: #1f1830;
+      --bg2: #3a2440;
+      --gold: #f5d9a2;
+      --text: #fdf8f2;
+      --muted: #f1e6de;
+      --accent: #e7a8b6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      background:
+        radial-gradient(1100px 700px at 8% 12%, rgba(246, 190, 202, 0.28), transparent 60%),
+        radial-gradient(1000px 700px at 88% 86%, rgba(245, 217, 162, 0.2), transparent 60%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .card {
+      width: min(860px, 96vw);
+      border-radius: 28px;
+      padding: clamp(24px, 4.6vw, 52px);
+      background:
+        linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      backdrop-filter: blur(11px);
+      -webkit-backdrop-filter: blur(11px);
+      border: 1px solid rgba(245, 217, 162, 0.35);
+      box-shadow:
+        0 22px 65px rgba(22, 10, 25, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before,
+    .card::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(4px);
+    }
+
+    .card::before {
+      width: 270px;
+      height: 270px;
+      right: -90px;
+      top: -95px;
+      background: radial-gradient(circle, rgba(245, 217, 162, 0.35), transparent 68%);
+    }
+
+    .card::after {
+      width: 240px;
+      height: 240px;
+      left: -85px;
+      bottom: -100px;
+      background: radial-gradient(circle, rgba(231, 168, 182, 0.35), transparent 68%);
+    }
+
+    .ornament {
+      position: absolute;
+      width: 248px;
+      height: 248px;
+      background-repeat: no-repeat;
+      background-size: contain;
+      pointer-events: none;
+      opacity: 0.2;
+      mix-blend-mode: screen;
+    }
+
+    .rose-left {
+      left: -20px;
+      bottom: 38px;
+      transform: rotate(-8deg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23f3c7d1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M108 146c-9-13-7-30 4-42 12-13 31-18 46-10-4 16-15 29-31 35-9 4-17 8-19 17Z'/%3E%3Cpath d='M106 144c-15-4-27-16-33-30-6-15-4-34 10-45 13 10 20 25 20 41 0 10 1 19 9 26Z'/%3E%3Cpath d='M108 146c0-17 9-32 23-41 14-10 33-11 47-2-8 13-22 22-38 23-10 0-19 2-27 10Z'/%3E%3Cpath d='M110 144c-17 2-34-3-45-15-12-12-15-31-7-46 15 6 27 17 32 33 3 10 8 18 18 23Z'/%3E%3Cpath d='M111 143c7 22 11 35 9 58'/%3E%3Cpath d='M120 190c7-2 11-7 14-13'/%3E%3Cpath d='M113 182c-9-1-16-7-21-15'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .rose-right {
+      right: -24px;
+      top: 78px;
+      transform: scaleX(-1) rotate(-14deg);
+      opacity: 0.15;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23f8ddb0' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M108 146c-9-13-7-30 4-42 12-13 31-18 46-10-4 16-15 29-31 35-9 4-17 8-19 17Z'/%3E%3Cpath d='M106 144c-15-4-27-16-33-30-6-15-4-34 10-45 13 10 20 25 20 41 0 10 1 19 9 26Z'/%3E%3Cpath d='M108 146c0-17 9-32 23-41 14-10 33-11 47-2-8 13-22 22-38 23-10 0-19 2-27 10Z'/%3E%3Cpath d='M110 144c-17 2-34-3-45-15-12-12-15-31-7-46 15 6 27 17 32 33 3 10 8 18 18 23Z'/%3E%3Cpath d='M111 143c7 22 11 35 9 58'/%3E%3Cpath d='M120 190c7-2 11-7 14-13'/%3E%3Cpath d='M113 182c-9-1-16-7-21-15'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .kicker {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--gold);
+      margin-bottom: 14px;
+      opacity: 0.95;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: clamp(30px, 5vw, 46px);
+      font-weight: 600;
+      line-height: 1.25;
+      color: #fff3d8;
+      text-shadow: 0 4px 26px rgba(245, 217, 162, 0.3);
+    }
+
+    .poem {
+      font-size: clamp(17px, 2.2vw, 22px);
+      line-height: 2;
+      color: var(--muted);
+      white-space: pre-line;
+      margin-top: 8px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+
+    .poem .hl { color: #ffecc4; }
+
+    .signature {
+      margin-top: 34px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(245, 217, 162, 0.34);
+      text-align: right;
+      color: #ffe9c4;
+      line-height: 1.8;
+      font-size: clamp(15px, 1.8vw, 18px);
+    }
+
+    .signature .name {
+      font-size: clamp(20px, 2.8vw, 28px);
+      color: #fff2d4;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.58);
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <article class="card" role="main" aria-label="女神节祝福贺卡">
+    <div class="ornament rose-left" aria-hidden="true"></div>
+    <div class="ornament rose-right" aria-hidden="true"></div>
+
+    <div class="kicker">To the remarkable women of WorOrange</div>
+    <h1>谨以春光，致敬每一位了不起的她</h1>
+
+    <section class="poem">
+在时间的纹理里，你们以智慧作笔，以温柔为锋，
+把平凡的日常，写成了熠熠生辉的篇章。
+你们并不喧哗，却自有光芒；
+不必借谁的火焰，也能照亮一方天地。
+
+是你们，让理性有了温度，让奔赴有了意义；
+让“坚持”不只是抵达，更是一种优雅的生长。
+那些被认真对待的细节，那些不动声色的担当，
+都在岁月深处，回响为动人的答案。
+
+愿你们在热爱里丰盛，在自我中笃定，
+愿每一次抬头都有星辰可望，
+每一步向前都与辽阔相逢。
+
+<span class="hl">提前祝女神节快乐。
+愿你们始终是春天本身——
+自由、明亮，且无可替代。</span>
+    </section>
+
+    <footer class="signature">
+      <div>致沃橙全体女神</div>
+      <div class="name">阿苏日 · 沃橙 CEO</div>
+      <div>2026 · 女神节前夕</div>
+    </footer>
+
+    <div class="footer">WorOrange Greeting Card</div>
+  </article>
+</body>
+</html>
