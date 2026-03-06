@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>沃橙CEO女神节贺卡</title>
+  <style>
+    :root {
+      --bg1: #0f1021;
+      --bg2: #1a1d3b;
+      --gold: #f6d78b;
+      --text: #f7f3ea;
+      --muted: #d9d1c2;
+      --accent: #d27d8a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(246, 215, 139, 0.13), transparent 60%),
+        radial-gradient(1000px 700px at 80% 90%, rgba(210, 125, 138, 0.13), transparent 60%),
+        linear-gradient(140deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .card {
+      width: min(860px, 96vw);
+      border-radius: 26px;
+      padding: clamp(24px, 4.6vw, 52px);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(246, 215, 139, 0.25);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before,
+    .card::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .card::before {
+      width: 240px;
+      height: 240px;
+      right: -80px;
+      top: -90px;
+      background: radial-gradient(circle, rgba(246, 215, 139, 0.28), transparent 65%);
+    }
+
+    .card::after {
+      width: 220px;
+      height: 220px;
+      left: -70px;
+      bottom: -90px;
+      background: radial-gradient(circle, rgba(210, 125, 138, 0.25), transparent 65%);
+    }
+
+    .kicker {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--gold);
+      margin-bottom: 14px;
+      opacity: 0.95;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: clamp(30px, 5vw, 46px);
+      font-weight: 600;
+      line-height: 1.25;
+      color: #fff6de;
+      text-shadow: 0 3px 20px rgba(246, 215, 139, 0.25);
+    }
+
+    .poem {
+      font-size: clamp(17px, 2.2vw, 22px);
+      line-height: 2;
+      color: var(--muted);
+      white-space: pre-line;
+      margin-top: 6px;
+    }
+
+    .poem .hl { color: #ffe7b0; }
+
+    .signature {
+      margin-top: 34px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(246, 215, 139, 0.28);
+      text-align: right;
+      color: #fbe9be;
+      line-height: 1.8;
+      font-size: clamp(15px, 1.8vw, 18px);
+    }
+
+    .signature .name {
+      font-size: clamp(20px, 2.8vw, 28px);
+      color: #fff4d6;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .footer {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.55);
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <article class="card" role="main" aria-label="女神节祝福贺卡">
+    <div class="kicker">To the remarkable women of WorOrange</div>
+    <h1>谨以春光，致敬每一位了不起的她</h1>
+
+    <section class="poem">
+在时间的纹理里，你们以智慧作笔，以温柔为锋，
+把平凡的日常，写成了熠熠生辉的篇章。
+你们并不喧哗，却自有光芒；
+不必借谁的火焰，也能照亮一方天地。
+
+是你们，让理性有了温度，让奔赴有了意义；
+让“坚持”不只是抵达，更是一种优雅的生长。
+那些被认真对待的细节，那些不动声色的担当，
+都在岁月深处，回响为动人的答案。
+
+愿你们在热爱里丰盛，在自我中笃定，
+愿每一次抬头都有星辰可望，
+每一步向前都与辽阔相逢。
+
+<span class="hl">提前祝女神节快乐。
+愿你们始终是春天本身——
+自由、明亮，且无可替代。</span>
+    </section>
+
+    <footer class="signature">
+      <div>致沃橙全体女神</div>
+      <div class="name">阿苏日 · 沃橙 CEO</div>
+      <div>2026 · 女神节前夕</div>
+    </footer>
+
+    <div class="footer">WorOrange Greeting Card</div>
+  </article>
+</body>
+</html>
