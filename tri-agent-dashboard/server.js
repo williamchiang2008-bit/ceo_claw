@@ -8,31 +8,39 @@ const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const DATA_DIR = path.join(ROOT, 'data');
 const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
+const TOKEN_HISTORY_FILE = path.join(DATA_DIR, 'token-history.json');
+const SKILL_PLAN_FILE = path.join(DATA_DIR, 'skill-plan.json');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(TASKS_FILE)) {
-  fs.writeFileSync(TASKS_FILE, JSON.stringify({ currentTask: {}, logs: [] }, null, 2));
+if (!fs.existsSync(TASKS_FILE)) fs.writeFileSync(TASKS_FILE, JSON.stringify({ currentTask: {}, logs: [] }, null, 2));
+if (!fs.existsSync(TOKEN_HISTORY_FILE)) fs.writeFileSync(TOKEN_HISTORY_FILE, JSON.stringify({ points: [] }, null, 2));
+if (!fs.existsSync(SKILL_PLAN_FILE)) {
+  fs.writeFileSync(SKILL_PLAN_FILE, JSON.stringify({
+    wishSkills: [
+      { name: 'github', reason: '代码协作与PR流转' },
+      { name: 'himalaya', reason: '邮件自动化' },
+      { name: 'notion', reason: '知识库协同' },
+      { name: 'tmux', reason: '并行任务自动化' },
+      { name: 'model-usage', reason: '更精细的模型成本看板' }
+    ]
+  }, null, 2));
 }
 
 function runOpenClaw(args) {
   return new Promise((resolve, reject) => {
-    execFile('openclaw', args, { maxBuffer: 5 * 1024 * 1024 }, (err, stdout, stderr) => {
+    execFile('openclaw', args, { maxBuffer: 8 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) return reject(new Error(stderr || err.message));
       resolve(stdout);
     });
   });
 }
 
-function readTasks() {
-  try {
-    return JSON.parse(fs.readFileSync(TASKS_FILE, 'utf8'));
-  } catch {
-    return { currentTask: {}, logs: [] };
-  }
+function readJson(file, fallback) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
 }
 
-function writeTasks(data) {
-  fs.writeFileSync(TASKS_FILE, JSON.stringify(data, null, 2));
+function writeJson(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
 function json(res, status, data) {
@@ -46,11 +54,7 @@ function parseBody(req) {
     req.on('data', (c) => (raw += c));
     req.on('end', () => {
       if (!raw) return resolve({});
-      try {
-        resolve(JSON.parse(raw));
-      } catch (e) {
-        reject(e);
-      }
+      try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
     });
     req.on('error', reject);
   });
@@ -86,6 +90,13 @@ function aggregateAgents(agents, sessions, tasks) {
   });
 }
 
+function appendTokenPoint(agents) {
+  const history = readJson(TOKEN_HISTORY_FILE, { points: [] });
+  history.points.push({ at: Date.now(), agents: agents.map((a) => ({ id: a.id, totalTokens: a.totalTokens, latestTokens: a.latestTokens })) });
+  if (history.points.length > 300) history.points = history.points.slice(-300);
+  writeJson(TOKEN_HISTORY_FILE, history);
+}
+
 async function getOverview() {
   const [agentsRaw, sessionsRaw] = await Promise.all([
     runOpenClaw(['agents', 'list', '--json']),
@@ -93,15 +104,54 @@ async function getOverview() {
   ]);
 
   const agents = JSON.parse(agentsRaw);
-  const sessionsPayload = JSON.parse(sessionsRaw);
-  const sessions = sessionsPayload.sessions || [];
-  const tasks = readTasks();
+  const sessions = JSON.parse(sessionsRaw).sessions || [];
+  const tasks = readJson(TASKS_FILE, { currentTask: {}, logs: [] });
+  const aggr = aggregateAgents(agents, sessions, tasks);
+  appendTokenPoint(aggr);
 
   return {
     updatedAt: Date.now(),
-    agents: aggregateAgents(agents, sessions, tasks),
-    taskLogs: (tasks.logs || []).slice(-50).reverse(),
+    agents: aggr,
+    taskLogs: (tasks.logs || []).slice(-80).reverse(),
   };
+}
+
+async function getSkillsData() {
+  const [agentsRaw, skillsRaw] = await Promise.all([
+    runOpenClaw(['agents', 'list', '--json']),
+    runOpenClaw(['skills', 'list', '--json'])
+  ]);
+
+  const agents = JSON.parse(agentsRaw);
+  const skillPayload = JSON.parse(skillsRaw);
+  const skills = skillPayload.skills || [];
+  const eligible = skills.filter((s) => s.eligible);
+  const blocked = skills.filter((s) => !s.eligible);
+  const wish = readJson(SKILL_PLAN_FILE, { wishSkills: [] }).wishSkills || [];
+
+  return {
+    updatedAt: Date.now(),
+    summary: {
+      total: skills.length,
+      eligible: eligible.length,
+      blocked: blocked.length,
+      commonForAllThree: eligible.map((s) => s.name),
+    },
+    agents: agents.map((a) => ({ id: a.id, name: a.identityName || a.name || a.id, emoji: a.identityEmoji || '🤖' })),
+    eligible,
+    blocked: blocked.slice(0, 25),
+    wishSkills: wish,
+    playbook: [
+      '看可用技能：openclaw skills list --eligible --json',
+      '看某个技能详情：openclaw skills info <skill-name>',
+      '缺依赖时，按 missing.bins / missing.env / missing.config 逐项补齐',
+      '补齐后刷新本页面，或点“立即刷新状态/Tk”让Token和状态同步更新'
+    ]
+  };
+}
+
+function getTokenHistory() {
+  return readJson(TOKEN_HISTORY_FILE, { points: [] });
 }
 
 function serveStatic(req, res) {
@@ -109,6 +159,7 @@ function serveStatic(req, res) {
   const filePath = path.join(PUBLIC_DIR, reqPath);
   if (!filePath.startsWith(PUBLIC_DIR)) return json(res, 403, { error: 'forbidden' });
   if (!fs.existsSync(filePath)) return json(res, 404, { error: 'not found' });
+
   const ext = path.extname(filePath);
   const typeMap = {
     '.html': 'text/html; charset=utf-8',
@@ -122,63 +173,53 @@ function serveStatic(req, res) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    if (req.method === 'GET' && req.url === '/api/overview') {
-      const data = await getOverview();
-      return json(res, 200, data);
-    }
+    if (req.method === 'GET' && req.url === '/api/overview') return json(res, 200, await getOverview());
+    if (req.method === 'GET' && req.url === '/api/token-history') return json(res, 200, getTokenHistory());
+    if (req.method === 'GET' && req.url === '/api/skills') return json(res, 200, await getSkillsData());
 
     if (req.method === 'POST' && req.url === '/api/task') {
-      const body = await parseBody(req);
-      const { agentId, task } = body;
+      const { agentId, task } = await parseBody(req);
       if (!agentId) return json(res, 400, { error: 'agentId required' });
-      const tasks = readTasks();
+      const tasks = readJson(TASKS_FILE, { currentTask: {}, logs: [] });
       tasks.currentTask[agentId] = task || '';
       tasks.logs.push({ id: `${Date.now()}`, agentId, task: task || '', at: Date.now(), type: 'task-set' });
-      writeTasks(tasks);
+      writeJson(TASKS_FILE, tasks);
       return json(res, 200, { ok: true });
     }
 
     if (req.method === 'POST' && req.url === '/api/chat') {
-      const body = await parseBody(req);
-      const { agentId, message } = body;
+      const { agentId, message } = await parseBody(req);
       if (!agentId || !message) return json(res, 400, { error: 'agentId and message required' });
 
-      const tasks = readTasks();
+      const tasks = readJson(TASKS_FILE, { currentTask: {}, logs: [] });
       tasks.currentTask[agentId] = message;
       tasks.logs.push({ id: `${Date.now()}`, agentId, task: message, at: Date.now(), type: 'chat-send' });
-      writeTasks(tasks);
+      writeJson(TASKS_FILE, tasks);
 
       const output = await runOpenClaw(['agent', '--agent', agentId, '--message', message, '--json', '--timeout', '180']);
       const payload = JSON.parse(output);
       const reply = payload?.result?.payloads?.map((p) => p.text).filter(Boolean).join('\n') || '';
 
       tasks.logs.push({ id: `${Date.now()}-reply`, agentId, task: reply, at: Date.now(), type: 'chat-reply' });
-      writeTasks(tasks);
+      writeJson(TASKS_FILE, tasks);
 
-      return json(res, 200, {
-        ok: true,
-        reply,
-        usage: payload?.result?.meta?.agentMeta?.lastCallUsage || null,
-      });
+      return json(res, 200, { ok: true, reply, usage: payload?.result?.meta?.agentMeta?.lastCallUsage || null });
     }
 
     if (req.method === 'POST' && req.url === '/api/broadcast') {
-      const body = await parseBody(req);
-      const { message, agentIds } = body;
+      const { message, agentIds } = await parseBody(req);
       if (!message) return json(res, 400, { error: 'message required' });
 
       const overview = await getOverview();
-      const targets = Array.isArray(agentIds) && agentIds.length
-        ? overview.agents.filter((a) => agentIds.includes(a.id)).map((a) => a.id)
-        : overview.agents.map((a) => a.id);
+      const targets = Array.isArray(agentIds) && agentIds.length ? overview.agents.filter((a) => agentIds.includes(a.id)).map((a) => a.id) : overview.agents.map((a) => a.id);
 
-      const tasks = readTasks();
+      const tasks = readJson(TASKS_FILE, { currentTask: {}, logs: [] });
       const replies = [];
 
       for (const agentId of targets) {
         tasks.currentTask[agentId] = message;
         tasks.logs.push({ id: `${Date.now()}-${agentId}`, agentId, task: message, at: Date.now(), type: 'broadcast-send' });
-        writeTasks(tasks);
+        writeJson(TASKS_FILE, tasks);
 
         const output = await runOpenClaw(['agent', '--agent', agentId, '--message', message, '--json', '--timeout', '180']);
         const payload = JSON.parse(output);
@@ -186,7 +227,7 @@ const server = http.createServer(async (req, res) => {
         replies.push({ agentId, reply, usage: payload?.result?.meta?.agentMeta?.lastCallUsage || null });
 
         tasks.logs.push({ id: `${Date.now()}-${agentId}-reply`, agentId, task: reply, at: Date.now(), type: 'broadcast-reply' });
-        writeTasks(tasks);
+        writeJson(TASKS_FILE, tasks);
       }
 
       return json(res, 200, { ok: true, replies });
@@ -199,5 +240,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`tri-agent-dashboard running: http://127.0.0.1:${PORT}`);
+  console.log(`爸爸驾驶舱运行中: http://127.0.0.1:${PORT}`);
 });

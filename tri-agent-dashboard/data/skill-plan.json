@@ -1,0 +1,24 @@
+{
+  "wishSkills": [
+    {
+      "name": "github",
+      "reason": "代码协作与PR流转"
+    },
+    {
+      "name": "himalaya",
+      "reason": "邮件自动化"
+    },
+    {
+      "name": "notion",
+      "reason": "知识库协同"
+    },
+    {
+      "name": "tmux",
+      "reason": "并行任务自动化"
+    },
+    {
+      "name": "model-usage",
+      "reason": "更精细的模型成本看板"
+    }
+  ]
+}

@@ -6,22 +6,30 @@
     <title>爸爸驾驶舱</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background:#0f1220; color:#ecf0ff; }
-      .wrap { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
-      .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+      .wrap { max-width: 1240px; margin: 24px auto; padding: 0 16px; }
+      .top { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
       button { border:0; border-radius:10px; background:#4e6bff; color:white; padding:8px 12px; cursor:pointer; }
       .muted { color:#99a3c7; font-size:13px; }
+      .tabs { display:flex; gap:8px; margin-top:10px; }
+      .tab-btn { background:#222845; }
+      .tab-btn.active { background:#4e6bff; }
+      .tab { display:none; }
+      .tab.active { display:block; }
       .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:14px; margin-top:16px; }
       .card { background:#171b31; border:1px solid #2b335c; border-radius:14px; padding:14px; }
-      .row { display:flex; justify-content:space-between; margin:6px 0; font-size:14px; }
+      .row { display:flex; justify-content:space-between; margin:6px 0; font-size:14px; gap:8px; }
       input, textarea { width:100%; background:#0e1328; color:#ecf0ff; border:1px solid #313b69; border-radius:8px; padding:8px; box-sizing:border-box; }
       textarea { min-height:70px; }
       .ops { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
       .reply { white-space:pre-wrap; background:#0e1328; border-radius:8px; padding:8px; margin-top:8px; font-size:13px; }
       table { width:100%; border-collapse:collapse; margin-top:20px; font-size:13px; }
-      th, td { border-bottom:1px solid #2a3052; padding:8px; text-align:left; }
+      th, td { border-bottom:1px solid #2a3052; padding:8px; text-align:left; vertical-align:top; }
       .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
       .on { background:#22c55e; }
       .off { background:#6b7280; }
+      .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; background:#27305b; margin-right:6px; margin-bottom:6px; }
+      .kpi { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:10px; margin-top:12px; }
+      canvas { width:100%; background:#0e1328; border:1px solid #313b69; border-radius:10px; }
     </style>
   </head>
   <body>
@@ -33,41 +41,87 @@
           <span class="muted" id="ts"></span>
         </div>
       </div>
-      <div class="muted">爸爸专用：页面每 10 秒自动刷新。手动点“立即刷新”会立刻拉取最新状态与Tk。</div>
 
-      <div class="card" style="margin-top:12px;">
-        <h3>一键广播任务（给三壮）</h3>
-        <textarea id="broadcastMsg" placeholder="例如：今晚把各自待办、风险、下一步用3条要点汇报"></textarea>
-        <button id="broadcastBtn" style="margin-top:8px;">广播并收集回复</button>
-        <div class="reply" id="broadcastReply">暂无广播结果</div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="overview">总览&任务</button>
+        <button class="tab-btn" data-tab="skills">技能中心</button>
       </div>
 
-      <div class="grid" id="cards"></div>
+      <section id="overview" class="tab active">
+        <div class="muted">爸爸专用：页面每10秒自动刷新。Token曲线展示的是每次刷新记录下来的三壮累计Tk走势。</div>
 
-      <h3>任务/交互日志</h3>
-      <table>
-        <thead><tr><th>时间</th><th>Agent</th><th>类型</th><th>内容</th></tr></thead>
-        <tbody id="logs"></tbody>
-      </table>
+        <div class="kpi" id="kpis"></div>
+        <div class="card" style="margin-top:12px;">
+          <h3>Token 使用趋势</h3>
+          <canvas id="tokenChart" width="1150" height="240"></canvas>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>一键广播任务（给三壮）</h3>
+          <textarea id="broadcastMsg" placeholder="例如：今晚把各自待办、风险、下一步用3条要点汇报"></textarea>
+          <button id="broadcastBtn" style="margin-top:8px;">广播并收集回复</button>
+          <div class="reply" id="broadcastReply">暂无广播结果</div>
+        </div>
+
+        <div class="grid" id="cards"></div>
+
+        <h3>任务/交互日志</h3>
+        <table>
+          <thead><tr><th>时间</th><th>Agent</th><th>类型</th><th>内容</th></tr></thead>
+          <tbody id="logs"></tbody>
+        </table>
+      </section>
+
+      <section id="skills" class="tab">
+        <div class="muted">这里给爸爸看：三壮现在会哪些技能、哪些技能还没装好、以及下一步该补什么。</div>
+        <div class="card" style="margin-top:12px;">
+          <h3>三壮共同可用技能</h3>
+          <div id="commonSkills"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>建议优先学习/补齐</h3>
+          <table>
+            <thead><tr><th>技能</th><th>理由</th></tr></thead>
+            <tbody id="wishSkills"></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>怎么执行和操作</h3>
+          <ul id="playbook"></ul>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>当前不可用技能（前25项）</h3>
+          <table>
+            <thead><tr><th>技能</th><th>主要缺失</th></tr></thead>
+            <tbody id="blockedSkills"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <script>
       const cards = document.getElementById('cards');
       const logs = document.getElementById('logs');
       const ts = document.getElementById('ts');
+      const kpis = document.getElementById('kpis');
+      const colors = { main: '#22d3ee', 'data-analyst': '#f59e0b', 'education-manager': '#a78bfa' };
 
       function fmtTime(ms){ return new Date(ms).toLocaleString(); }
-      function fmtAge(ms){
-        if(ms == null) return '-';
-        const m = Math.floor(ms/60000);
-        if(m < 1) return '刚刚';
-        if(m < 60) return `${m} 分钟前`;
-        return `${Math.floor(m/60)} 小时前`;
-      }
+      function fmtAge(ms){ if(ms == null) return '-'; const m = Math.floor(ms/60000); if(m < 1) return '刚刚'; if(m < 60) return `${m} 分钟前`; return `${Math.floor(m/60)} 小时前`; }
+      async function post(url, body){ const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}); return r.json(); }
 
-      async function post(url, body){
-        const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-        return r.json();
+      function bindTabs(){
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+          };
+        });
       }
 
       function renderAgent(a){
@@ -77,44 +131,73 @@
           <h3>${a.emoji} ${a.name}</h3>
           <div class="row"><span>状态</span><span><i class="dot ${a.active ? 'on' : 'off'}"></i>${a.active ? '活跃' : '空闲'}</span></div>
           <div class="row"><span>模型</span><span>${a.model || '-'}</span></div>
-          <div class="row"><span>最近Tk</span><span>${a.latestTokens || 0}</span></div>
+          <div class="row"><span>最近会话Tk</span><span>${a.latestTokens || 0}</span></div>
           <div class="row"><span>累计Tk</span><span>${a.totalTokens || 0}</span></div>
           <div class="row"><span>最近活动</span><span>${fmtAge(a.latestAgeMs)}</span></div>
           <div class="row"><span>当前任务</span><span>${a.currentTask || '-'}</span></div>
-          <div class="ops">
-            <input placeholder="手动设置当前任务" id="task-${a.id}" />
-            <button id="set-${a.id}">更新任务</button>
-          </div>
+          <div class="ops"><input placeholder="手动设置当前任务" id="task-${a.id}" /><button id="set-${a.id}">更新任务</button></div>
           <textarea id="msg-${a.id}" placeholder="给 ${a.name} 发一条指令..."></textarea>
           <button id="ask-${a.id}">发送并等待回复</button>
-          <div class="reply" id="reply-${a.id}">暂无回复</div>
-        `;
+          <div class="reply" id="reply-${a.id}">暂无回复</div>`;
 
         setTimeout(() => {
           document.getElementById(`set-${a.id}`).onclick = async () => {
             const task = document.getElementById(`task-${a.id}`).value.trim();
             await post('/api/task', { agentId: a.id, task });
-            load();
+            loadOverview();
           };
-
           document.getElementById(`ask-${a.id}`).onclick = async () => {
-            const message = document.getElementById(`msg-${a.id}`).value.trim();
-            if(!message) return;
-            const box = document.getElementById(`reply-${a.id}`);
-            box.textContent = '处理中...';
+            const message = document.getElementById(`msg-${a.id}`).value.trim(); if(!message) return;
+            const box = document.getElementById(`reply-${a.id}`); box.textContent = '处理中...';
             const r = await post('/api/chat', { agentId: a.id, message });
             box.textContent = r.reply || r.error || '无文本回复';
-            load();
+            loadOverview();
           };
         }, 0);
 
         return el;
       }
 
-      async function load(){
-        const r = await fetch('/api/overview');
-        const data = await r.json();
+      function drawTokenChart(points){
+        const canvas = document.getElementById('tokenChart');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(!points.length) return;
+        const pad = 30;
+        const series = {};
+        points.forEach(p => (p.agents || []).forEach(a => { if(!series[a.id]) series[a.id] = []; series[a.id].push(a.totalTokens || 0); }));
+        const all = Object.values(series).flat();
+        const max = Math.max(1, ...all);
+
+        ctx.strokeStyle = '#3b4574';
+        ctx.strokeRect(pad, pad, canvas.width - pad*2, canvas.height - pad*2);
+
+        Object.entries(series).forEach(([id, arr]) => {
+          ctx.beginPath();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = colors[id] || '#fff';
+          arr.forEach((v, i) => {
+            const x = pad + (i/(Math.max(1,arr.length-1))) * (canvas.width - pad*2);
+            const y = canvas.height - pad - (v/max) * (canvas.height - pad*2);
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          });
+          ctx.stroke();
+        });
+      }
+
+      async function loadOverview(){
+        const [overviewRes, histRes] = await Promise.all([fetch('/api/overview'), fetch('/api/token-history')]);
+        const data = await overviewRes.json();
+        const hist = await histRes.json();
+
         ts.textContent = `最后刷新：${fmtTime(data.updatedAt)}`;
+        const totalTk = (data.agents || []).reduce((n,a)=>n+(a.totalTokens||0),0);
+        const activeCount = (data.agents || []).filter(a=>a.active).length;
+        kpis.innerHTML = `
+          <div class="card"><div class="muted">三壮总累计Tk</div><div style="font-size:26px;font-weight:700;">${totalTk}</div></div>
+          <div class="card"><div class="muted">当前活跃数量</div><div style="font-size:26px;font-weight:700;">${activeCount}/3</div></div>
+          <div class="card"><div class="muted">最近日志条数</div><div style="font-size:26px;font-weight:700;">${(data.taskLogs||[]).length}</div></div>`;
+
         cards.innerHTML = '';
         (data.agents || []).forEach(a => cards.appendChild(renderAgent(a)));
 
@@ -124,26 +207,40 @@
           tr.innerHTML = `<td>${fmtTime(x.at)}</td><td>${x.agentId}</td><td>${x.type}</td><td>${(x.task || '').replace(/</g,'&lt;')}</td>`;
           logs.appendChild(tr);
         });
+
+        drawTokenChart((hist.points || []).slice(-80));
       }
 
-      document.getElementById('refresh').onclick = load;
+      async function loadSkills(){
+        const r = await fetch('/api/skills');
+        const data = await r.json();
 
+        const common = document.getElementById('commonSkills');
+        common.innerHTML = (data.summary.commonForAllThree || []).map(x => `<span class="pill">${x}</span>`).join('') || '暂无';
+
+        document.getElementById('wishSkills').innerHTML = (data.wishSkills || []).map(x => `<tr><td>${x.name}</td><td>${x.reason || ''}</td></tr>`).join('');
+        document.getElementById('playbook').innerHTML = (data.playbook || []).map(x => `<li>${x}</li>`).join('');
+
+        document.getElementById('blockedSkills').innerHTML = (data.blocked || []).map(s => {
+          const miss = [...(s.missing?.bins||[]), ...(s.missing?.env||[]), ...(s.missing?.config||[])].slice(0,4).join(', ') || '依赖未满足';
+          return `<tr><td>${s.name}</td><td>${miss}</td></tr>`;
+        }).join('');
+      }
+
+      document.getElementById('refresh').onclick = async () => { await loadOverview(); await loadSkills(); };
       document.getElementById('broadcastBtn').onclick = async () => {
-        const message = document.getElementById('broadcastMsg').value.trim();
-        if(!message) return;
-        const box = document.getElementById('broadcastReply');
-        box.textContent = '广播处理中...';
+        const message = document.getElementById('broadcastMsg').value.trim(); if(!message) return;
+        const box = document.getElementById('broadcastReply'); box.textContent = '广播处理中...';
         const r = await post('/api/broadcast', { message });
-        if(r.error) {
-          box.textContent = r.error;
-        } else {
-          box.textContent = (r.replies || []).map(x => `${x.agentId}: ${x.reply || '（无文本回复）'}`).join('\n\n');
-        }
-        load();
+        box.textContent = r.error ? r.error : (r.replies || []).map(x => `${x.agentId}: ${x.reply || '（无文本回复）'}`).join('\n\n');
+        loadOverview();
       };
 
-      load();
-      setInterval(load, 10000);
+      bindTabs();
+      loadOverview();
+      loadSkills();
+      setInterval(loadOverview, 10000);
+      setInterval(loadSkills, 30000);
     </script>
   </body>
 </html>

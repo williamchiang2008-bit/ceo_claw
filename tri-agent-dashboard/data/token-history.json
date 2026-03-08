@@ -1,0 +1,24 @@
+{
+  "points": [
+    {
+      "at": 1772968380483,
+      "agents": [
+        {
+          "id": "main",
+          "totalTokens": 96221,
+          "latestTokens": 32223
+        },
+        {
+          "id": "data-analyst",
+          "totalTokens": 32498,
+          "latestTokens": 13485
+        },
+        {
+          "id": "education-manager",
+          "totalTokens": 14489,
+          "latestTokens": 14489
+        }
+      ]
+    }
+  ]
+}
