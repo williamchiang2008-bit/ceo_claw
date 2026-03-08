@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>三壮作战看板</title>
+    <title>爸爸驾驶舱</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background:#0f1220; color:#ecf0ff; }
       .wrap { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
@@ -27,13 +27,21 @@
   <body>
     <div class="wrap">
       <div class="top">
-        <h2>三壮作战看板</h2>
+        <h2>爸爸驾驶舱</h2>
         <div>
           <button id="refresh">立即刷新状态/Tk</button>
           <span class="muted" id="ts"></span>
         </div>
       </div>
-      <div class="muted">页面每 10 秒自动刷新。你手动点“立即刷新”会立刻拉最新数据。</div>
+      <div class="muted">爸爸专用：页面每 10 秒自动刷新。手动点“立即刷新”会立刻拉取最新状态与Tk。</div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3>一键广播任务（给三壮）</h3>
+        <textarea id="broadcastMsg" placeholder="例如：今晚把各自待办、风险、下一步用3条要点汇报"></textarea>
+        <button id="broadcastBtn" style="margin-top:8px;">广播并收集回复</button>
+        <div class="reply" id="broadcastReply">暂无广播结果</div>
+      </div>
+
       <div class="grid" id="cards"></div>
 
       <h3>任务/交互日志</h3>
@@ -119,6 +127,21 @@
       }
 
       document.getElementById('refresh').onclick = load;
+
+      document.getElementById('broadcastBtn').onclick = async () => {
+        const message = document.getElementById('broadcastMsg').value.trim();
+        if(!message) return;
+        const box = document.getElementById('broadcastReply');
+        box.textContent = '广播处理中...';
+        const r = await post('/api/broadcast', { message });
+        if(r.error) {
+          box.textContent = r.error;
+        } else {
+          box.textContent = (r.replies || []).map(x => `${x.agentId}: ${x.reply || '（无文本回复）'}`).join('\n\n');
+        }
+        load();
+      };
+
       load();
       setInterval(load, 10000);
     </script>

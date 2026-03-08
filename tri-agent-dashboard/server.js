@@ -162,6 +162,36 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    if (req.method === 'POST' && req.url === '/api/broadcast') {
+      const body = await parseBody(req);
+      const { message, agentIds } = body;
+      if (!message) return json(res, 400, { error: 'message required' });
+
+      const overview = await getOverview();
+      const targets = Array.isArray(agentIds) && agentIds.length
+        ? overview.agents.filter((a) => agentIds.includes(a.id)).map((a) => a.id)
+        : overview.agents.map((a) => a.id);
+
+      const tasks = readTasks();
+      const replies = [];
+
+      for (const agentId of targets) {
+        tasks.currentTask[agentId] = message;
+        tasks.logs.push({ id: `${Date.now()}-${agentId}`, agentId, task: message, at: Date.now(), type: 'broadcast-send' });
+        writeTasks(tasks);
+
+        const output = await runOpenClaw(['agent', '--agent', agentId, '--message', message, '--json', '--timeout', '180']);
+        const payload = JSON.parse(output);
+        const reply = payload?.result?.payloads?.map((p) => p.text).filter(Boolean).join('\n') || '';
+        replies.push({ agentId, reply, usage: payload?.result?.meta?.agentMeta?.lastCallUsage || null });
+
+        tasks.logs.push({ id: `${Date.now()}-${agentId}-reply`, agentId, task: reply, at: Date.now(), type: 'broadcast-reply' });
+        writeTasks(tasks);
+      }
+
+      return json(res, 200, { ok: true, replies });
+    }
+
     return serveStatic(req, res);
   } catch (e) {
     return json(res, 500, { error: e.message || 'server error' });
